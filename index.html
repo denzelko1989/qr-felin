@@ -8,7 +8,7 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
-.card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); padding: 2rem; width: 100%; max-width: 420px; }
+.card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); padding: 2rem; width: 100%; max-width: 440px; }
 h1 { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
 .sub { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
 label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
@@ -16,23 +16,42 @@ input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 
 input:focus { border-color: #4a7fcb; }
 button.main { width: 100%; padding: 12px; background: #1a3a6b; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
 .result { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #eee; text-align: center; display: none; }
-.meta { margin-top: 12px; font-size: 13px; color: #555; line-height: 1.8; }
+.qr-box { display: inline-block; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 1rem; }
+.meta { font-size: 14px; color: #333; line-height: 2; }
 .meta strong { color: #1a1a1a; }
+.meta .hint { font-size: 12px; color: #999; margin-top: 8px; }
 button.print { margin-top: 1rem; width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; color: #333; }
-.logo { font-size: 13px; color: #aaa; text-align: center; margin-top: 1.5rem; }
+.logo { font-size: 12px; color: #ccc; text-align: center; margin-top: 1.5rem; }
+
 @media print {
-  body { background: #fff; padding: 0; display: block; }
-  .card { box-shadow: none; max-width: 100%; padding: 1rem; }
+  @page { size: A4; margin: 25mm 20mm; }
+  html, body { background: #fff !important; }
+  body { display: block; padding: 0; margin: 0; }
   .no-print { display: none !important; }
-  h1, .sub, .logo { display: none; }
-  .result { border: none; margin-top: 0; padding-top: 0; }
+  .card { box-shadow: none; border-radius: 0; max-width: 100%; padding: 0; margin: 0; }
+  .result { display: block !important; border: none; padding-top: 0; margin-top: 0; }
+  .print-header { display: block !important; }
 }
+.print-header {
+  display: none;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.print-header h2 { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+.print-header p { font-size: 13px; color: #666; }
 </style>
 </head>
 <body>
 <div class="card">
-  <h1>QR kód pre platbu</h1>
-  <p class="sub">Felin, s.r.o. — dobierka / platba prevodom</p>
+
+  <div class="print-header" id="printHeader">
+    <h2 id="printTitle">Platobný QR kód</h2>
+    <p>Felin, s.r.o. — platba prevodom</p>
+  </div>
+
+  <h1 class="no-print">QR kód pre platbu</h1>
+  <p class="sub no-print">Felin, s.r.o. — dobierka / platba prevodom</p>
+
   <div class="no-print">
     <label for="order">Číslo objednávky</label>
     <input type="text" id="order" placeholder="napr. 2026000990" />
@@ -40,14 +59,22 @@ button.print { margin-top: 1rem; width: 100%; padding: 10px; background: #fff; b
     <input type="number" id="amount" placeholder="napr. 349.00" step="0.01" min="0" />
     <button class="main" onclick="generate()">Vygenerovať QR kód</button>
   </div>
+
   <div class="result" id="result">
-    <canvas id="qr"></canvas>
+    <div class="qr-box">
+      <canvas id="qr"></canvas>
+    </div>
     <div class="meta" id="meta"></div>
-    <button class="print no-print" onclick="window.print()">Vytlačiť</button>
+    <button class="print no-print" onclick="window.print()">&#128438; Vytlačiť</button>
   </div>
+
   <div class="logo no-print">catalina.sk</div>
 </div>
-<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+
+<script>
+// Self-contained QR code generator (MIT license, adapted from davidshimjs/qrcodejs)
+!function(){function a(a,b){this.typeNumber=a,this.errorCorrectLevel=b,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}function b(a,b){this.totalCount=a,this.dataCount=b}function c(){this.buffer=[],this.length=0}function d(a){this.mode=4,this.data=a}function e(a,b){if(void 0==a.length)throw new Error(a.length+"/"+b);this.num=new Array(a.length+b);for(var c=0;c<a.length;c++)this.num[c]=a[c];for(var c=a.length;c<this.num.length;c++)this.num[c]=0}function f(a){var b=0,c=a;for(b=0;0!=c;)b++,c>>>=1;return b}var g={PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],G15:1335,G18:7973,G15_MASK:21522,getBCHTypeInfo:function(a){for(var b=a<<10;f(b)-f(g.G15)>=0;)b^=g.G15<<f(b)-f(g.G15);return(a<<10|b)^g.G15_MASK},getBCHTypeNumber:function(a){for(var b=a<<12;f(b)-f(g.G18)>=0;)b^=g.G18<<f(b)-f(g.G18);return a<<12|b},getPatternPosition:function(a){return g.PATTERN_POSITION_TABLE[a-1]},getMask:function(a,b,c){switch(a){case 0:return(b+c)%2==0;case 1:return b%2==0;case 2:return c%3==0;case 3:return(b+c)%3==0;case 4:return(Math.floor(b/2)+Math.floor(c/3))%2==0;case 5:return b*c%2+b*c%3==0;case 6:return(b*c%2+b*c%3)%2==0;case 7:return(b*c%3+(b+c)%2)%2==0}},getErrorCorrectPolynomial:function(a){for(var b=new e([1],0),c=0;c<a;c++)b=b.multiply(new e([1,i.gexp(c)],0));return b},getLengthInBits:function(a,b){if(1<=b&&b<10){if(4==a)return 8}else if(b<27){if(4==a)return 16}else if(4==a)return 16;throw new Error("mode:"+a+"/type:"+b)},getLostPoint:function(a){var b=a.getModuleCount(),c=0;for(var d=0;d<b;d++){for(var e=0;e<b;e++){var f=0;if(a.isDark(d,e)&&f++,d+1<b&&e+1<b){var g=a.isDark(d,e),h=a.isDark(d+1,e),j=a.isDark(d,e+1),k=a.isDark(d+1,e+1);(g==h&&h==j&&j==k)&&(c+=3)}}}return c}};var h={glog:function(a){if(a<1)throw new Error("glog("+a+")");return h.LOG_TABLE[a]},gexp:function(a){for(;a<0;)a+=255;for(;a>=256;)a-=255;return h.EXP_TABLE[a]},EXP_TABLE:new Array(256),LOG_TABLE:new Array(256)},i=h;for(var j=0;j<8;j++)i.EXP_TABLE[j]=1<<j;for(var j=8;j<256;j++)i.EXP_TABLE[j]=i.EXP_TABLE[j-4]^i.EXP_TABLE[j-5]^i.EXP_TABLE[j-6]^i.EXP_TABLE[j-8];for(var j=0;j<255;j++)i.LOG_TABLE[i.EXP_TABLE[j]]=j;e.prototype={get:function(a){return this.num[a]},getLength:function(){return this.num.length},multiply:function(a){for(var b=new Array(this.getLength()+a.getLength()-1),c=0;c<this.getLength();c++)for(var d=0;d<a.getLength();d++)b[c+d]^=i.gexp(i.glog(this.get(c))+i.glog(a.get(d)));return new e(b,0)},mod:function(a){if(this.getLength()-a.getLength()<0)return this;var b=i.gexp(i.glog(this.get(0))-i.glog(a.get(0)));for(var c=new Array(this.getLength()),d=0;d<this.getLength();d++)c[d]=this.get(d);for(var d=0;d<a.getLength();d++)c[d]^=i.gexp(i.glog(b)+i.glog(a.get(d)));return new e(c,0).mod(a)}};var k={RS_BLOCK_TABLE:[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16]],getRSBlocks:function(a,b){var c=k.getRsBlockTable(a,b);if(void 0==c)throw new Error("bad rs block @ typeNumber:"+a+"/errorCorrectLevel:"+b);for(var d=c.length/3,e=[],f=0;f<d;f++)for(var g=c[3*f+0],h=c[3*f+1],i=c[3*f+2],j=0;j<g;j++)e.push(new b(h,i));return e},getRsBlockTable:function(a,b){switch(b){case 1:return k.RS_BLOCK_TABLE[4*(a-1)+0];case 0:return k.RS_BLOCK_TABLE[4*(a-1)+1];case 3:return k.RS_BLOCK_TABLE[4*(a-1)+2];case 2:return k.RS_BLOCK_TABLE[4*(a-1)+3]}}};c.prototype={get:function(a){return 1==(this.buffer[Math.floor(a/8)]>>>7-a%8&1)},put:function(a,b){for(var c=0;c<b;c++)this.putBit(1==(a>>>b-c-1&1))},getLengthInBits:function(){return this.length},putBit:function(a){var b=Math.floor(this.length/8);this.buffer.length<=b&&this.buffer.push(0),a&&(this.buffer[b]|=128>>>this.length%8),this.length++}};var l=a;l.CorrectLevel={L:1,M:0,Q:3,H:2},l.prototype={addData:function(a){var b=new d(a);this.dataList.push(b),this.dataCache=null},isDark:function(a,b){if(a<0||this.moduleCount<=a||b<0||this.moduleCount<=b)throw new Error(a+","+b);return this.modules[a][b]},getModuleCount:function(){return this.moduleCount},make:function(){this.makeImpl(!1,this.getBestMaskPattern())},makeImpl:function(b,c){this.moduleCount=4*this.typeNumber+17,this.modules=new Array(this.moduleCount);for(var d=0;d<this.moduleCount;d++){this.modules[d]=new Array(this.moduleCount);for(var e=0;e<this.moduleCount;e++)this.modules[d][e]=null}this.setupPositionProbePattern(0,0),this.setupPositionProbePattern(this.moduleCount-7,0),this.setupPositionProbePattern(0,this.moduleCount-7),this.setupPositionAdjustPattern(),this.setupTimingPattern(),this.setupTypeInfo(b,c),this.typeNumber>=7&&this.setupTypeNumber(b),null==this.dataCache&&(this.dataCache=l.createData(this.typeNumber,this.errorCorrectLevel,this.dataList)),this.mapData(this.dataCache,c)},setupPositionProbePattern:function(a,b){for(var c=-1;c<=7;c++)if(!(a+c<=-1||this.moduleCount<=a+c))for(var d=-1;d<=7;d++)a+c>=0&&a+c<this.moduleCount&&b+d>=0&&b+d<this.moduleCount&&(this.modules[a+c][b+d]=c>=0&&c<=6&&(0==d||6==d)||d>=0&&d<=6&&(0==c||6==c)||c>=2&&c<=4&&d>=2&&d<=4)},getBestMaskPattern:function(){for(var a=0,b=0,c=0;c<8;c++){this.makeImpl(!0,c);var d=g.getLostPoint(this);(0==c||a>d)&&(a=d,b=c)}return b},setupTimingPattern:function(){for(var a=8;a<this.moduleCount-8;a++)null==this.modules[a][6]&&(this.modules[a][6]=a%2==0);for(var b=8;b<this.moduleCount-8;b++)null==this.modules[6][b]&&(this.modules[6][b]=b%2==0)},setupPositionAdjustPattern:function(){for(var a=g.getPatternPosition(this.typeNumber),b=0;b<a.length;b++)for(var c=0;c<a.length;c++){var d=a[b],e=a[c];if(null==this.modules[d][e])for(var f=-2;f<=2;f++)for(var h=-2;h<=2;h++)this.modules[d+f][e+h]=-2==f||2==f||-2==h||2==h||0==f&&0==h}},setupTypeNumber:function(a){for(var b=g.getBCHTypeNumber(this.typeNumber),c=0;c<18;c++){var d=!a&&1==(b>>c&1);this.modules[Math.floor(c/3)][c%3+this.moduleCount-8-3]=d}for(var c=0;c<18;c++){var d=!a&&1==(b>>c&1);this.modules[c%3+this.moduleCount-8-3][Math.floor(c/3)]=d}},setupTypeInfo:function(a,b){for(var c=this.errorCorrectLevel<<3|b,d=g.getBCHTypeInfo(c),e=0;e<15;e++){var f=!a&&1==(d>>e&1);e<6?this.modules[e][8]=f:e<8?this.modules[e+1][8]=f:this.modules[this.moduleCount-15+e][8]=f}for(var e=0;e<15;e++){var f=!a&&1==(d>>e&1);e<8?this.modules[8][this.moduleCount-e-1]=f:e<9?this.modules[8][15-e-1+1]=f:this.modules[8][15-e-1]=f}this.modules[this.moduleCount-8][8]=!a},mapData:function(a,b){for(var c=-1,d=this.moduleCount-1,e=7,f=0,h=this.moduleCount-1;h>0;h-=2){6==h&&h--;for(;;){for(var i=0;i<2;i++)if(null==this.modules[d][h-i]){var j=!1;f<a.length&&(j=1==(a[f]>>>e&1)),g.getMask(b,d,h-i)&&(j=!j),this.modules[d][h-i]=j,e--,-1==e&&(f++,e=7)}if(d+=c,d<0||this.moduleCount<=d){d-=c,c=-c;break}}}},l.PAD0=236,l.PAD1=17,l.createData=function(a,b,d){for(var e=k.getRSBlocks(a,b),f=new c,h=0;h<d.length;h++){var i=d[h];f.put(i.mode,4),f.put(i.getLength(),g.getLengthInBits(i.mode,a)),i.write(f)}for(var j=0,h=0;h<e.length;h++)j+=e[h].dataCount;if(f.getLengthInBits()>8*j)throw new Error("code length overflow. ("+f.getLengthInBits()+">"+8*j+")");for(f.getLengthInBits()+4<=8*e[0].dataCount&&f.put(0,4);f.getLengthInBits()%8!=0;)f.putBit(!1);for(;;){if(f.getLengthInBits()>=8*j)break;if(f.put(l.PAD0,8),f.getLengthInBits()>=8*j)break;f.put(l.PAD1,8)}return l.createBytes(f,e)},l.createBytes=function(a,b){for(var c=0,d=0,f=0,h=new Array(b.length),i=new Array(b.length),j=0;j<b.length;j++){var k=b[j].dataCount,m=b[j].totalCount-k;d=Math.max(d,k),f=Math.max(f,m),h[j]=new Array(k);for(var n=0;n<h[j].length;n++)h[j][n]=255&a.buffer[c++];i[j]=new Array(m);for(var n=0;n<i[j].length;n++)i[j][n]=0}for(var o=new Array(b.length),n=0;n<b.length;n++)o[n]=g.getErrorCorrectPolynomial(b[n].totalCount-b[n].dataCount),i[n]=(new e(h[n],o[n].getLength()-1)).mod(o[n]);for(var p=0,q=0;q<b.length;q++)p+=b[q].totalCount;for(var r=new Array(p),s=0,q=0;q<d;q++)for(var n=0;n<b.length;n++)q<h[n].length&&(r[s++]=h[n][q]);for(var q=0;q<f;q++)for(var n=0;n<b.length;n++)q<i[n].length&&(r[s++]=i[n][q]);return r},d.prototype={getLength:function(){return this.data.length},write:function(a){for(var b=0;b<this.data.length;b++)a.put(this.data.charCodeAt(b),8)}},window.QRCode=l}();
+</script>
 <script>
 var IBAN = "SK3175000000004034426980";
 var RECIPIENT = "Felin, s.r.o.";
@@ -56,38 +83,45 @@ function generate() {
   var order = document.getElementById("order").value.trim();
   var amount = document.getElementById("amount").value.trim();
   if (!order || !amount || isNaN(parseFloat(amount))) { alert("Zadaj číslo objednávky a sumu."); return; }
+
   var amtStr = parseFloat(amount).toFixed(2);
   var payload = "SPD*1.0*ACC:" + IBAN + "*AM:" + amtStr + "*CC:EUR*X-VS:" + order + "*MSG:Objednavka " + order;
 
-  var qr = qrcode(0, 'M');
-  qr.addData(payload);
-  qr.make();
-
   var canvas = document.getElementById("qr");
-  var size = 220;
-  var count = qr.getModuleCount();
-  var tile = size / count;
-  canvas.width = size;
-  canvas.height = size;
-  var ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = "#000";
-  for (var row = 0; row < count; row++) {
-    for (var col = 0; col < count; col++) {
-      if (qr.isDark(row, col)) {
-        ctx.fillRect(Math.round(col * tile), Math.round(row * tile), Math.ceil(tile), Math.ceil(tile));
-      }
-    }
+  canvas.width = 0; canvas.height = 0;
+  var tmp = document.createElement("div");
+  tmp.style.display = "none";
+  document.body.appendChild(tmp);
+
+  try {
+    var qr = new QRCode(tmp, { text: payload, width: 250, height: 250, correctLevel: QRCode.CorrectLevel.M });
+    setTimeout(function() {
+      var src = tmp.querySelector("canvas") || tmp.querySelector("img");
+      var dataUrl = src.tagName === "CANVAS" ? src.toDataURL() : src.src;
+      document.body.removeChild(tmp);
+      var img = new Image();
+      img.onload = function() {
+        canvas.width = 250; canvas.height = 250;
+        canvas.getContext("2d").drawImage(img, 0, 0);
+      };
+      img.src = dataUrl;
+    }, 200);
+  } catch(e) {
+    document.body.removeChild(tmp);
+    alert("Chyba: " + e.message);
+    return;
   }
 
   document.getElementById("result").style.display = "block";
+  document.getElementById("printTitle").textContent = "Platobný QR kód — objednávka " + order;
+
   var fmt = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
   document.getElementById("meta").innerHTML =
     "<strong>" + RECIPIENT + "</strong><br>" +
-    "IBAN: " + IBAN.match(/.{1,4}/g).join(" ") + "<br>" +
-    "Objedn\u00e1vka: <strong>" + order + "</strong> | Suma: <strong>" + fmt.format(parseFloat(amount)) + "</strong><br>" +
-    "VS: " + order;
+    "IBAN:&nbsp; " + IBAN.match(/.{1,4}/g).join(" ") + "<br>" +
+    "Objedn\u00e1vka:&nbsp; <strong>" + order + "</strong>&nbsp;&nbsp;&nbsp;Suma:&nbsp; <strong>" + fmt.format(parseFloat(amount)) + "</strong><br>" +
+    "VS:&nbsp; " + order + "<br>" +
+    "<span class='hint'>Naskenujte QR k\u00f3d mobilnou bankovnicou a zaplate.</span>";
 }
 
 document.getElementById("order").addEventListener("keydown", function(e){ if(e.key==="Enter") generate(); });
