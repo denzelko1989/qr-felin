@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="sk">
 <head>
@@ -40,26 +41,55 @@ button.print { margin-top: 1rem; width: 100%; padding: 10px; background: #fff; b
     <button class="main" onclick="generate()">Vygenerovať QR kód</button>
   </div>
   <div class="result" id="result">
-    <img id="qrImg" width="220" height="220" />
+    <canvas id="qr"></canvas>
     <div class="meta" id="meta"></div>
     <button class="print no-print" onclick="window.print()">Vytlačiť</button>
   </div>
   <div class="logo no-print">catalina.sk</div>
 </div>
+<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
 var IBAN = "SK3175000000004034426980";
 var RECIPIENT = "Felin, s.r.o.";
+
 function generate() {
   var order = document.getElementById("order").value.trim();
   var amount = document.getElementById("amount").value.trim();
   if (!order || !amount || isNaN(parseFloat(amount))) { alert("Zadaj číslo objednávky a sumu."); return; }
   var amtStr = parseFloat(amount).toFixed(2);
   var payload = "SPD*1.0*ACC:" + IBAN + "*AM:" + amtStr + "*CC:EUR*X-VS:" + order + "*MSG:Objednavka " + order;
-  document.getElementById("qrImg").src = "https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=" + encodeURIComponent(payload);
+
+  var qr = qrcode(0, 'M');
+  qr.addData(payload);
+  qr.make();
+
+  var canvas = document.getElementById("qr");
+  var size = 220;
+  var count = qr.getModuleCount();
+  var tile = size / count;
+  canvas.width = size;
+  canvas.height = size;
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = "#000";
+  for (var row = 0; row < count; row++) {
+    for (var col = 0; col < count; col++) {
+      if (qr.isDark(row, col)) {
+        ctx.fillRect(Math.round(col * tile), Math.round(row * tile), Math.ceil(tile), Math.ceil(tile));
+      }
+    }
+  }
+
   document.getElementById("result").style.display = "block";
   var fmt = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
-  document.getElementById("meta").innerHTML = "<strong>" + RECIPIENT + "</strong><br>IBAN: " + IBAN.match(/.{1,4}/g).join(" ") + "<br>Objednávka: <strong>" + order + "</strong> | Suma: <strong>" + fmt.format(parseFloat(amount)) + "</strong><br>VS: " + order;
+  document.getElementById("meta").innerHTML =
+    "<strong>" + RECIPIENT + "</strong><br>" +
+    "IBAN: " + IBAN.match(/.{1,4}/g).join(" ") + "<br>" +
+    "Objedn\u00e1vka: <strong>" + order + "</strong> | Suma: <strong>" + fmt.format(parseFloat(amount)) + "</strong><br>" +
+    "VS: " + order;
 }
+
 document.getElementById("order").addEventListener("keydown", function(e){ if(e.key==="Enter") generate(); });
 document.getElementById("amount").addEventListener("keydown", function(e){ if(e.key==="Enter") generate(); });
 </script>
