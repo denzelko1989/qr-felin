@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Platba — Felin, s.r.o.</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); padding: 2rem; width: 100%; max-width: 420px; }
+  h1 { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+  label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
+  input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; color: #1a1a1a; outline: none; transition: border-color 0.2s; margin-bottom: 1rem; }
+  input:focus { border-color: #4a7fcb; }
+  button.main { width: 100%; padding: 12px; background: #1a3a6b; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  button.main:hover { background: #142d55; }
+  .result { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #eee; text-align: center; display: none; }
+  .result canvas { display: block; margin: 0 auto; }
+  .meta { margin-top: 12px; font-size: 13px; color: #555; line-height: 1.8; }
+  .meta strong { color: #1a1a1a; }
+  button.print { margin-top: 1rem; width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; color: #333; transition: background 0.15s; }
+  button.print:hover { background: #f5f5f5; }
+  .logo { font-size: 13px; color: #aaa; text-align: center; margin-top: 1.5rem; }
+
+  @media print {
+    body { background: #fff; padding: 0; display: block; }
+    .card { box-shadow: none; max-width: 100%; padding: 1rem; }
+    .no-print { display: none !important; }
+    h1, .sub { display: none; }
+    .result { border: none; margin-top: 0; padding-top: 0; }
+    .logo { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>QR kód pre platbu</h1>
+  <p class="sub">Felin, s.r.o. — dobierka / platba prevodom</p>
+
+  <div class="no-print">
+    <label for="order">Číslo objednávky</label>
+    <input type="text" id="order" placeholder="napr. 2026000990" />
+
+    <label for="amount">Suma (€)</label>
+    <input type="number" id="amount" placeholder="napr. 349.00" step="0.01" min="0" />
+
+    <button class="main" onclick="generate()">&#9726; Vygenerovať QR kód</button>
+  </div>
+
+  <div class="result" id="result">
+    <canvas id="qrCanvas"></canvas>
+    <div class="meta" id="meta"></div>
+    <button class="print no-print" onclick="window.print()">&#128438; Vytlačiť</button>
+  </div>
+
+  <div class="logo no-print">catalina.sk</div>
+</div>
+
+<script>
+// QR Code library (embedded — funguje offline)
+// qrcodejs — MIT license
+var qrcode=function(){var a=function(c,b){this.typeNumber=c;this.errorCorrectLevel=b;this.modules=null;this.moduleCount=0;this.dataCache=null;this.dataList=[]};a.prototype={addData:function(c){var b=new p(c);this.dataList.push(b);this.dataCache=null},isDark:function(c,b){if(c<0||this.moduleCount<=c||b<0||this.moduleCount<=b)throw new Error(c+","+b);return this.modules[c][b]},getModuleCount:function(){return this.moduleCount},make:function(){this.makeImpl(!1,this.getBestMaskPattern())},makeImpl:function(c,b){this.moduleCount=this.typeNumber*4+17;this.modules=new Array(this.moduleCount);for(var d=0;d<this.moduleCount;d++){this.modules[d]=new Array(this.moduleCount);for(var e=0;e<this.moduleCount;e++)this.modules[d][e]=null}this.setupPositionProbePattern(0,0);this.setupPositionProbePattern(this.moduleCount-7,0);this.setupPositionProbePattern(0,this.moduleCount-7);this.setupPositionAdjustPattern();this.setupTimingPattern();this.setupTypeInfo(c,b);if(7<=this.typeNumber)this.setupTypeNumber(c);if(this.dataCache==null)this.dataCache=a.createData(this.typeNumber,this.errorCorrectLevel,this.dataList);this.mapData(this.dataCache,b)},setupPositionProbePattern:function(c,b){for(var d=-1;d<=7;d++)if(!(c+d<=-1||this.moduleCount<=c+d))for(var e=-1;e<=7;e++)if(!(b+e<=-1||this.moduleCount<=b+e))this.modules[c+d][b+e]=0<=d&&d<=6&&(e==0||e==6)||0<=e&&e<=6&&(d==0||d==6)||2<=d&&d<=4&&2<=e&&e<=4?!0:!1},getBestMaskPattern:function(){for(var c=0,b=0,d=0;d<8;d++){this.makeImpl(!0,d);var e=f.getLostPoint(this);if(d==0||c>e){c=e;b=d}}return b},createMovieClip:function(c,b,d){c=c.createEmptyMovieClip(b,d);this.make();for(b=0;b<this.modules.length;b++){var e=b*a.pointSize;for(d=0;d<this.modules[b].length;d++){var g=d*a.pointSize;e=c.beginFill(0,100);if(this.isDark(b,d))c.moveTo(g,e),c.lineTo(g+a.pointSize,e),c.lineTo(g+a.pointSize,e+a.pointSize),c.lineTo(g,e+a.pointSize),c.endFill()}}return c},setupTimingPattern:function(){for(var c=8;c<this.moduleCount-8;c++)if(this.modules[c][6]==null)this.modules[c][6]=c%2==0;for(var b=8;b<this.moduleCount-8;b++)if(this.modules[6][b]==null)this.modules[6][b]=b%2==0},setupPositionAdjustPattern:function(){for(var c=f.getPatternPosition(this.typeNumber),b=0;b<c.length;b++)for(var d=0;d<c.length;d++){var e=c[b],g=c[d];if(this.modules[e][g]==null){for(var h=-2;h<=2;h++)for(var k=-2;k<=2;k++)this.modules[e+h][g+k]=h==-2||h==2||k==-2||k==2||h==0&&k==0?!0:!1}}},setupTypeNumber:function(c){for(var b=f.getBCHTypeNumber(this.typeNumber),d=0;d<18;d++){var e=!c&&(b>>d&1)==1;this.modules[Math.floor(d/3)][d%3+this.moduleCount-8-3]=e}for(d=0;d<18;d++)e=!c&&(b>>d&1)==1,this.modules[d%3+this.moduleCount-8-3][Math.floor(d/3)]=e},setupTypeInfo:function(c,b){for(var d=f.getBCHTypeInfo(this.errorCorrectLevel<<3|b),e=0;e<15;e++){var g=!c&&(d>>e&1)==1;e<6?this.modules[e][8]=g:e<8?this.modules[e+1][8]=g:this.modules[this.moduleCount-15+e][8]=g}for(e=0;e<15;e++)g=!c&&(d>>e&1)==1,e<8?this.modules[8][this.moduleCount-e-1]=g:e<9?this.modules[8][15-e-1+1]=g:this.modules[8][15-e-1]=g;this.modules[this.moduleCount-8][8]=!c},mapData:function(c,b){for(var d=-1,e=this.moduleCount-1,g=7,h=0,k=this.moduleCount-1;0<k;k-=2){k==6&&k--;for(;;){for(var n=0;2>n;n++)if(this.modules[e][k-n]==null){var l=!1;h<c.length&&(l=(c[h]>>>g&1)==1);f.getMask(b,e,k-n)&&(l=!l);this.modules[e][k-n]=l;g--;if(-1==g){h++;g=7}}e+=d;if(0>e||this.moduleCount<=e){e-=d;d=-d;break}}}},};a.PAD0=0xEC;a.PAD1=0x11;a.createData=function(c,b,d){for(var e=s.getRSBlocks(c,b),g=new t,h=0;h<d.length;h++){var k=d[h];g.put(k.mode,4);g.put(k.getLength(),f.getLengthInBits(k.mode,c));k.write(g)}for(h=0;h<e.length;h++)if(g.getLengthInBits()>8*e[h].totalCount)throw new Error("code length overflow. ("+g.getLengthInBits()+">"+8*e[h].totalCount+")");g.getLengthInBits()+4<=8*e[0].totalCount&&g.put(0,4);for(;g.getLengthInBits()%8!=0;)g.putBit(!1);for(;!(g.getLengthInBits()>=8*e[0].totalCount);){g.put(a.PAD0,8);if(g.getLengthInBits()>=8*e[0].totalCount)break;g.put(a.PAD1,8)}return a.createBytes(g,e)};a.createBytes=function(c,b){for(var d=0,e=0,g=0,h=new Array(b.length),k=new Array(b.length),n=0;n<b.length;n++){var l=b[n].dataCount,q=b[n].totalCount-l;e=Math.max(e,l);g=Math.max(g,q);h[n]=new Array(l);for(var r=0;r<h[n].length;r++)h[n][r]=0xFF&c.buffer[d++];k[n]=new Array(q);for(r=0;r<k[n].length;r++)k[n][r]=0}var m=new Array(b.length);for(r=n=0;r<b.length;r++)m[r]=f.getErrorCorrectPolynomial(b[r].totalCount-b[r].dataCount),k[r]=new u(h[r],m[r].getLength()-1).mod(m[r]),n+=b[r].totalCount;d=new Array(n);l=0;for(r=0;r<e;r++)for(n=0;n<b.length;n++)r<h[n].length&&(d[l++]=h[n][r]);for(r=0;r<g;r++)for(n=0;n<b.length;n++)r<k[n].length&&(d[l++]=k[n][r]);return d};var f={PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],G15:1335,G18:7973,G15_MASK:21522,getBCHTypeInfo:function(c){for(var b=c<<10;0<=f.getBCHDigit(b)-f.getBCHDigit(f.G15);)b^=f.G15<<f.getBCHDigit(b)-f.getBCHDigit(f.G15);return(c<<10|b)^f.G15_MASK},getBCHTypeNumber:function(c){for(var b=c<<12;0<=f.getBCHDigit(b)-f.getBCHDigit(f.G18);)b^=f.G18<<f.getBCHDigit(b)-f.getBCHDigit(f.G18);return c<<12|b},getBCHDigit:function(c){for(var b=0;0!=c;)b++,c>>>=1;return b},getPatternPosition:function(c){return f.PATTERN_POSITION_TABLE[c-1]},getMask:function(c,b,d){switch(c){case 0:return(b+d)%2==0;case 1:return b%2==0;case 2:return d%3==0;case 3:return(b+d)%3==0;case 4:return(Math.floor(b/2)+Math.floor(d/3))%2==0;case 5:return b*d%2+b*d%3==0;case 6:return(b*d%2+b*d%3)%2==0;case 7:return(b*d%3+(b+d)%2)%2==0}},getErrorCorrectPolynomial:function(c){for(var b=new u([1],0),d=0;d<c;d++)b=b.multiply(new u([1,v.gexp(d)],0));return b},getLengthInBits:function(c,b){if(1<=b&&10>b){if(c==1)return 10;if(c==2)return 9;if(c==3||c==4)return 8;if(c==8)return 8}else if(10<=b&&27>b){if(c==1)return 12;if(c==2)return 11;if(c==3)return 10;if(c==4)return 10;if(c==8)return 10}else if(27<=b&&41>b){if(c==1)return 14;if(c==2)return 13;if(c==3)return 12;if(c==4)return 12;if(c==8)return 12}throw new Error("type:"+c+"/"+b);},getLostPoint:function(c){for(var b=c.getModuleCount(),d=0,e=0;e<b;e++){for(var g=0,h=!1,k=!1,n=0;n<b;n++){var l=c.isDark(e,n);if(l)g++;else{if(4<=g)d+=(g-3)*3+40;g=0}l!=h?(g=1,h=l):g++;if(n>0&&l==k){var q=0;if(l){for(var r=n-1;0<=r&&c.isDark(e,r);r--)q++;for(r=n+1;r<b&&c.isDark(e,r);r++)q++}q>=5&&(d+=q-5+3)}k=l}if(4<=g)d+=(g-3)*3+40}for(n=0;n<b;n++){for(e=0,h=!1,k=!1,g=0;g<b;g++){l=c.isDark(g,n);l!=h?(e=1,h=l):e++;if(g>0&&l==k){q=0;if(l){for(r=g-1;0<=r&&c.isDark(r,n);r--)q++;for(r=g+1;r<b&&c.isDark(r,n);r++)q++}q>=5&&(d+=q-5+3)}k=l}4<=e&&(d+=(e-3)*3+40)}for(e=0;e<b-1;e++)for(n=0;n<b-1;n++){g=0;c.isDark(e,n)&&g++;c.isDark(e+1,n)&&g++;c.isDark(e,n+1)&&g++;c.isDark(e+1,n+1)&&g++;(g==0||g==4)&&(d+=3)}for(e=0;e<b;e++){for(n=0;n<b-6;n++)if(c.isDark(e,n)&&!c.isDark(e,n+1)&&c.isDark(e,n+2)&&c.isDark(e,n+3)&&c.isDark(e,n+4)&&!c.isDark(e,n+5)&&c.isDark(e,n+6))if(n+10<b){for(g=0,r=n+7;r<=n+10;r++)c.isDark(e,r)&&g++;g==4&&(d+=40)}else if(0<=n-4){for(g=0,r=n-4;r<=n-1;r++)c.isDark(e,r)&&g++;g==4&&(d+=40)}}for(n=0;n<b;n++){for(e=0;e<b-6;e++)if(c.isDark(e,n)&&!c.isDark(e+1,n)&&c.isDark(e+2,n)&&c.isDark(e+3,n)&&c.isDark(e+4,n)&&!c.isDark(e+5,n)&&c.isDark(e+6,n))if(e+10<b){for(g=0,r=e+7;r<=e+10;r++)c.isDark(r,n)&&g++;g==4&&(d+=40)}else if(0<=e-4){for(g=0,r=e-4;r<=e-1;r++)c.isDark(r,n)&&g++;g==4&&(d+=40)}}var m=0;for(e=0;e<b;e++)for(n=0;n<b;n++)c.isDark(e,n)&&m++;return d+=Math.abs(100*m/b/b-50)/5*10}},v={glog:function(c){if(1>c)throw new Error("glog("+c+")");return v.LOG_TABLE[c]},gexp:function(c){for(;0>c;)c+=255;for(;256<=c;)c-=255;return v.EXP_TABLE[c]},EXP_TABLE:new Array(256),LOG_TABLE:new Array(256)};for(var j=0;8>j;j++)v.EXP_TABLE[j]=1<<j;for(j=8;256>j;j++)v.EXP_TABLE[j]=v.EXP_TABLE[j-4]^v.EXP_TABLE[j-5]^v.EXP_TABLE[j-6]^v.EXP_TABLE[j-8];for(j=0;255>j;j++)v.LOG_TABLE[v.EXP_TABLE[j]]=j;var u=function(c,b){if(void 0==c.length)throw new Error(c.length+"/"+b);this.num=new Array(c.length+b);for(var d=0;d<c.length;d++)this.num[d]=c[d]};u.prototype={get:function(c){return this.num[c]},getLength:function(){return this.num.length},multiply:function(c){for(var b=new Array(this.getLength()+c.getLength()-1),d=0;d<this.getLength();d++)for(var e=0;e<c.getLength();e++)b[d+e]^=v.gexp(v.glog(this.get(d))+v.glog(c.get(e)));return new u(b,0)},mod:function(c){if(0<=this.getLength()-c.getLength()){for(var b=v.gexp(v.glog(this.get(0))-v.glog(c.get(0))),d=new Array(this.getLength()),e=0;e<this.getLength();e++)d[e]=this.get(e);for(e=0;e<c.getLength();e++)d[e]^=v.gexp(v.glog(b)+v.glog(c.get(e)));return(new u(d,0)).mod(c)}return this}};var s={RS_BLOCK_TABLE:[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],getRSBlocks:function(c,b){var d=s.getRsBlockTable(c,b);if(d==void 0)throw new Error("bad rs block @ typeNumber:"+c+"/errorCorrectLevel:"+b);for(var e=d.length/3,g=[],h=0;h<e;h++)for(var k=d[3*h],n=d[3*h+1],l=d[3*h+2],q=0;q<k;q++)g.push(new r(n,l));return g},getRsBlockTable:function(c,b){switch(b){case 1:return s.RS_BLOCK_TABLE[(c-1)*4];case 0:return s.RS_BLOCK_TABLE[(c-1)*4+1];case 3:return s.RS_BLOCK_TABLE[(c-1)*4+2];case 2:return s.RS_BLOCK_TABLE[(c-1)*4+3]}}};var r=function(c,b){this.totalCount=c;this.dataCount=b},t=function(){this.buffer=[];this.length=0};t.prototype={get:function(c){return(this.buffer[Math.floor(c/8)]>>>7-c%8&1)==1},put:function(c,b){for(var d=0;d<b;d++)this.putBit((c>>>(b-d-1)&1)==1)},getLengthInBits:function(){return this.length},putBit:function(c){var b=Math.floor(this.length/8);this.buffer.length<=b&&this.buffer.push(0);c&&(this.buffer[b]|=128>>>this.length%8);this.length++}};var p=function(c){this.mode=4;this.data=c};p.prototype={getLength:function(){return this.data.length},write:function(c){for(var b=0;b<this.data.length;b++)c.put(this.data.charCodeAt(b),8)}};return{stringToBytes:function(c){for(var b=[],d=0;d<c.length;d++)b.push(c.charCodeAt(d));return b},createQrCode:function(c,b){var d=new a(-1,b);d.addData(c);d.make();return d},renderToCanvas:function(c,b,d){d=d||10;var e=b.getModuleCount(),g=d*e;c.width=g;c.height=g;var h=c.getContext("2d");h.fillStyle="#FFFFFF";h.fillRect(0,0,g,g);h.fillStyle="#000000";for(var k=0;k<e;k++)for(var n=0;n<e;n++)b.isDark(k,n)&&h.fillRect(n*d,k*d,d,d)}}}();
+
+const IBAN = "SK3175000000004034426980";
+const RECIPIENT = "Felin, s.r.o.";
+
+function generate() {
+  const order = document.getElementById("order").value.trim();
+  const amount = document.getElementById("amount").value.trim();
+  if (!order || !amount || isNaN(parseFloat(amount))) {
+    alert("Zadaj číslo objednávky a sumu.");
+    return;
+  }
+
+  const amtStr = parseFloat(amount).toFixed(2);
+  const payload = `SPD*1.0*ACC:${IBAN}*AM:${amtStr}*CC:EUR*X-VS:${order}*MSG:Objednavka ${order}`;
+
+  const resultDiv = document.getElementById("result");
+  resultDiv.style.display = "block";
+
+  const canvas = document.getElementById("qrCanvas");
+  try {
+    const qr = qrcode.createQrCode(payload, 0);
+    qrcode.renderToCanvas(canvas, qr, 7);
+  } catch(e) {
+    alert("Chyba pri generovaní QR: " + e.message);
+    return;
+  }
+
+  const fmt = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
+  document.getElementById("meta").innerHTML =
+    `<strong>${RECIPIENT}</strong><br>` +
+    `IBAN: ${IBAN.match(/.{1,4}/g).join(" ")}<br>` +
+    `Objednávka: <strong>${order}</strong> &nbsp;|&nbsp; Suma: <strong>${fmt.format(parseFloat(amount))}</strong><br>` +
+    `VS: ${order}`;
+}
+
+document.getElementById("order").addEventListener("keydown", e => e.key === "Enter" && generate());
+document.getElementById("amount").addEventListener("keydown", e => e.key === "Enter" && generate());
+</script>
+</body>
+</html>
