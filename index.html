@@ -7,26 +7,34 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
-.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.1);padding:2rem;width:100%;max-width:440px}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.1);padding:2rem;width:100%;max-width:460px}
 h1{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
 .sub{font-size:13px;color:#888;margin-bottom:1.5rem}
 label{font-size:13px;color:#555;display:block;margin-bottom:4px}
 input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:15px;outline:none;margin-bottom:1rem}
 input:focus{border-color:#4a7fcb}
 .btn{width:100%;padding:12px;background:#1a3a6b;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
-.btn:disabled{background:#999;cursor:not-allowed}
-.result{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #eee;text-align:center;display:none}
-.qrbox{display:inline-block;padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:12px}
-.meta{font-size:14px;color:#555;line-height:1.9}
-.meta strong{color:#1a1a1a}
-.pbtn{margin-top:1rem;width:100%;padding:10px;background:#fff;border:1px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer;color:#333}
+.result{margin-top:1.5rem;display:none}
+.qr-section{text-align:center;padding:1.5rem;background:#f9f9f9;border-radius:10px;margin-bottom:1rem}
+.qr-section img{display:block;margin:0 auto 12px}
+.qr-note{font-size:12px;color:#888;margin-top:8px}
+.info-box{border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-bottom:1rem}
+.info-row{display:flex;padding:10px 14px;border-bottom:1px solid #f0f0f0;align-items:center}
+.info-row:last-child{border-bottom:none}
+.info-label{font-size:12px;color:#888;width:110px;flex-shrink:0}
+.info-value{font-size:14px;color:#1a1a1a;font-weight:500;flex:1}
+.info-value.big{font-size:16px;font-weight:700;color:#1a3a6b}
+.copy-btn{background:none;border:1px solid #ddd;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;color:#555;margin-left:8px}
+.copy-btn:hover{background:#f0f0f0}
+.pbtn{width:100%;padding:10px;background:#fff;border:1px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer;color:#333;margin-top:4px}
 .logo{font-size:12px;color:#ccc;text-align:center;margin-top:1.5rem}
 @media print{
-  @page{size:A4;margin:25mm 20mm}
+  @page{size:A4;margin:20mm}
   body{background:#fff;display:block;padding:0}
   .card{box-shadow:none;border-radius:0;max-width:100%;padding:0}
   .noprint{display:none!important}
-  .result{display:block!important;border:none;padding-top:0;margin-top:0}
+  .result{display:block!important}
+  h1,.sub,.logo{display:none}
 }
 </style>
 </head>
@@ -34,6 +42,7 @@ input:focus{border-color:#4a7fcb}
 <div class="card">
   <h1 class="noprint">QR kód pre platbu</h1>
   <p class="sub noprint">Felin, s.r.o. — dobierka / platba prevodom</p>
+
   <div class="noprint">
     <label>Číslo objednávky</label>
     <input type="text" id="order" placeholder="napr. 2026000990"/>
@@ -41,41 +50,76 @@ input:focus{border-color:#4a7fcb}
     <input type="number" id="amount" placeholder="napr. 349.00" step="0.01" min="0"/>
     <button class="btn" id="btn" onclick="generate()">Vygenerovať QR kód</button>
   </div>
+
   <div class="result" id="result">
-    <div class="qrbox"><img id="qrimg" width="220" height="220"/></div>
-    <div class="meta" id="meta"></div>
-    <button class="pbtn noprint" onclick="window.print()">Vytlačiť</button>
+    <div class="qr-section">
+      <img id="qrimg" width="200" height="200"/>
+      <div style="font-size:13px;font-weight:500;color:#333;margin-bottom:4px">Naskenujte QR kód mobilnou bankovnicou</div>
+      <div class="qr-note">Funguje s ČSOB · Pri iných bankách zadajte údaje nižšie ručne</div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-row">
+        <span class="info-label">Príjemca</span>
+        <span class="info-value">Felin, s.r.o.</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">IBAN</span>
+        <span class="info-value">SK31 7500 0000 0040 3442 6980
+          <button class="copy-btn noprint" onclick="copy('SK3175000000004034426980')">Kopírovať</button>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Suma</span>
+        <span class="info-value big" id="infoAmount"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Variabilný symbol</span>
+        <span class="info-value" id="infoVS">
+          <button class="copy-btn noprint" id="copyVS" onclick="">Kopírovať</button>
+        </span>
+      </div>
+    </div>
+
+    <button class="pbtn noprint" onclick="window.print()">&#128438; Vytlačiť</button>
   </div>
+
   <div class="logo noprint">catalina.sk</div>
 </div>
+
 <script>
 var API = "https://qr-felin-api.onrender.com";
 var IBAN = "SK3175000000004034426980";
+
+function copy(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    alert("Skopírované: " + text);
+  });
+}
 
 function generate() {
   var order = document.getElementById("order").value.trim();
   var amount = document.getElementById("amount").value.trim();
   if (!order || !amount || isNaN(parseFloat(amount))) { alert("Zadaj číslo objednávky a sumu."); return; }
-  
+
   var btn = document.getElementById("btn");
   btn.textContent = "Generujem...";
   btn.disabled = true;
+
+  var fmt = new Intl.NumberFormat("sk-SK", {style:"currency", currency:"EUR"});
+  var amtFormatted = fmt.format(parseFloat(amount));
 
   fetch(API + "/qr?order=" + encodeURIComponent(order) + "&amount=" + encodeURIComponent(amount))
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.error) { alert("Chyba: " + data.error); return; }
       document.getElementById("qrimg").src = "data:image/png;base64," + data.qr;
+      document.getElementById("infoAmount").textContent = amtFormatted;
+      var vsEl = document.getElementById("infoVS");
+      vsEl.innerHTML = order + ' <button class="copy-btn noprint" onclick="copy(\'' + order + '\')">Kopírovať</button>';
       document.getElementById("result").style.display = "block";
-      var fmt = new Intl.NumberFormat("sk-SK", {style:"currency", currency:"EUR"});
-      document.getElementById("meta").innerHTML =
-        "<strong>Felin, s.r.o.</strong><br>" +
-        "IBAN: " + IBAN.match(/.{1,4}/g).join(" ") + "<br>" +
-        "Objednávka: <strong>" + order + "</strong> &nbsp;|&nbsp; Suma: <strong>" + fmt.format(parseFloat(amount)) + "</strong><br>" +
-        "VS: " + order + "<br>" +
-        "<small style='color:#999'>PAY by square — všetky slovenské banky</small>";
     })
-    .catch(function(e) { alert("Chyba spojenia: " + e); })
+    .catch(function(e) { alert("Chyba spojenia so serverom. Skúste znova."); })
     .finally(function() { btn.textContent = "Vygenerovať QR kód"; btn.disabled = false; });
 }
 
